@@ -3,12 +3,15 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var categoryViewModel: CategoryViewModel
     @EnvironmentObject var flashcardViewModel: FlashcardViewModel
+    @State private var showHeroSection = true
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    heroSection
+                    if showHeroSection {
+                        heroSection
+                    }
                     
                     if !categoryViewModel.categories.isEmpty {
                         recentCategoriesSection
@@ -24,6 +27,15 @@ struct HomeView: View {
     
     var heroSection: some View {
         VStack(spacing: 15) {
+            HStack {
+                Spacer()
+                Button("Скрыть") {
+                    showHeroSection = false
+                }
+                .font(.subheadline)
+                .foregroundColor(.blue)
+            }
+            
             Image(systemName: "rectangle.stack.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
