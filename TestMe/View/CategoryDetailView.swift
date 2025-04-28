@@ -9,6 +9,7 @@ struct CategoryDetailView: View {
     @State private var newDefinition = ""
     @State private var editMode = EditMode.inactive
     @State private var showingQuizView = false
+    @State private var showingCarouselView = false
     
     var flashcards: [Flashcard] {
         flashcardViewModel.getFlashcards(forCategoryId: category.id)
@@ -31,14 +32,15 @@ struct CategoryDetailView: View {
                         Image(systemName: "plus")
                     }
                     
-                    Button(action: { 
-                        if !flashcards.isEmpty {
-                            showingQuizView = true
+                    if !flashcards.isEmpty {
+                        Button(action: { showingCarouselView = true }) {
+                            Image(systemName: "rectangle.stack")
                         }
-                    }) {
-                        Image(systemName: "play.fill")
+                        
+                        Button(action: { showingQuizView = true }) {
+                            Image(systemName: "play.fill")
+                        }
                     }
-                    .disabled(flashcards.isEmpty)
                     
                     EditButton()
                 }
@@ -50,6 +52,18 @@ struct CategoryDetailView: View {
         .environment(\.editMode, $editMode)
         .sheet(isPresented: $showingQuizView) {
             QuizView(category: category, flashcards: flashcards)
+        }
+        .sheet(isPresented: $showingCarouselView) {
+            NavigationView {
+                FlashcardsCarouselView(flashcards: flashcards)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Закрыть") {
+                                showingCarouselView = false
+                            }
+                        }
+                    }
+            }
         }
     }
     
@@ -89,15 +103,27 @@ struct CategoryDetailView: View {
     var flashcardListView: some View {
         List {
             ForEach(flashcards) { flashcard in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(flashcard.term)
-                        .font(.headline)
-                        .lineLimit(1)
-                    
-                    Text(flashcard.definition)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+                NavigationLink(destination: FlashcardDetailView(flashcard: flashcard)) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(flashcard.term)
+                                .font(.headline)
+                                .lineLimit(1)
+                            
+                            if flashcard.isLearned {
+                                Spacer()
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.footnote)
+                            }
+                        }
+                        
+                        Text(flashcard.definition)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                    .padding(.vertical, 4)
                 }
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
@@ -128,15 +154,15 @@ struct CategoryDetailView: View {
     
     var addFlashcardView: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Термин")) {
-                    TextField("Введите термин", text: $newTerm)
+            ScrollView {
+                VStack(spacing: 25) {
+                    EditableCardFieldView(title: "Термин", content: $newTerm, isTitle: true)
+                    
+                    EditableCardFieldView(title: "Определение", content: $newDefinition, isTitle: false)
+                    
+                    Spacer(minLength: 20)
                 }
-                
-                Section(header: Text("Определение")) {
-                    TextEditor(text: $newDefinition)
-                        .frame(minHeight: 100)
-                }
+                .padding(.top)
             }
             .navigationTitle("Новая карточка")
             .navigationBarTitleDisplayMode(.inline)
