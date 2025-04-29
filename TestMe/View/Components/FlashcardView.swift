@@ -7,28 +7,22 @@ struct FlashcardView: View {
     
     @State private var offset = CGSize.zero
     @State private var rotation: Double = 0
+    @State private var cardHeight: CGFloat = 200
     
     var body: some View {
         VStack {
             ZStack {
                 frontCard
                     .opacity(isShowingAnswer ? 0 : 1)
-                    .rotation3DEffect(
-                        .degrees(isShowingAnswer ? 90 : 0),
-                        axis: (x: 0, y: 1, z: 0)
-                    )
+                    .frame(height: isShowingAnswer ? 0 : nil)
                 
                 backCard
                     .opacity(isShowingAnswer ? 1 : 0)
-                    .rotation3DEffect(
-                        .degrees(isShowingAnswer ? 0 : -90),
-                        axis: (x: 0, y: 1, z: 0)
-                    )
+                    .frame(height: isShowingAnswer ? nil : 0)
             }
-            .frame(width: 320, height: 200)
+            .frame(maxWidth: 320)
+            .frame(minHeight: 200)
             .offset(offset)
-            .animation(.spring(), value: offset)
-            .animation(.easeInOut(duration: 0.5), value: isShowingAnswer)
             .gesture(
                 TapGesture()
                     .onEnded { _ in
@@ -39,51 +33,59 @@ struct FlashcardView: View {
     }
     
     var frontCard: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.blue.opacity(0.2))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue, lineWidth: 2)
-            )
-            .overlay(
-                VStack {
-                    Text(flashcard.term)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                    
-                    Text("Нажмите, чтобы увидеть определение")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.bottom)
-                }
-            )
-            .shadow(radius: 5)
+        VStack {
+            Text(flashcard.term)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .padding()
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Text("Нажмите, чтобы увидеть определение")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.bottom)
+        }
+        .frame(maxWidth: 320)
+        .frame(height: 200)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.blue.opacity(0.2))
+                .shadow(radius: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.blue, lineWidth: 2)
+        )
     }
     
     var backCard: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.green.opacity(0.2))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.green, lineWidth: 2)
-            )
-            .overlay(
-                VStack {
-                    Text(flashcard.definition)
-                        .font(.title3)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                    
-                    Text("Нажмите, чтобы увидеть термин")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.bottom)
-                }
-            )
-            .shadow(radius: 5)
+        VStack {
+            Text(flashcard.definition)
+                .font(.title3)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .padding()
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            Text("Нажмите, чтобы увидеть термин")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.bottom)
+        }
+        .frame(maxWidth: 320)
+        .frame(minHeight: 200)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.green.opacity(0.2))
+                .shadow(radius: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.green, lineWidth: 2)
+        )
     }
 } 
