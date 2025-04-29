@@ -101,30 +101,30 @@ struct HomeView: View {
                 )
             }
             
-//            if let learnedCount = learnedFlashcardsCount {
-//                HStack(spacing: 15) {
-//                    statsCard(
-//                        count: learnedCount,
-//                        title: "Изучено",
-//                        icon: "checkmark.circle.fill",
-//                        color: .green
-//                    )
-//                    
-//                    statsCard(
-//                        count: flashcardViewModel.flashcards.count - learnedCount,
-//                        title: "Не изучено",
-//                        icon: "xmark.circle.fill",
-//                        color: .orange
-//                    )
-//                }
-//            }
+            if let learnedCount = learnedFlashcardsCount {
+                HStack(spacing: 15) {
+                    statsCard(
+                        count: learnedCount,
+                        title: "Изучено",
+                        icon: "checkmark.circle.fill",
+                        color: .green
+                    )
+                    
+                    statsCard(
+                        count: flashcardViewModel.flashcards.count - learnedCount,
+                        title: "Не изучено",
+                        icon: "xmark.circle.fill",
+                        color: .orange
+                    )
+                }
+            }
         }
     }
     
-//    var learnedFlashcardsCount: Int? {
-//        guard !flashcardViewModel.flashcards.isEmpty else { return nil }
-//        return flashcardViewModel.flashcards.filter { $0.isLearned }.count
-//    }
+    var learnedFlashcardsCount: Int? {
+        guard !flashcardViewModel.flashcards.isEmpty else { return nil }
+        return flashcardViewModel.flashcards.filter { $0.isLearned }.count
+    }
     
     func statsCard(count: Int, title: String, icon: String, color: Color) -> some View {
         VStack(spacing: 10) {
