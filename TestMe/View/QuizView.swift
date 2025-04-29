@@ -40,73 +40,69 @@ struct QuizView: View {
     }
     
     func quizContentView(flashcard: Flashcard) -> some View {
-        VStack(spacing: 20) {
-            // Progress bar
-            ProgressView(value: quizViewModel.progress)
-                .progressViewStyle(LinearProgressViewStyle())
-                .padding()
-            
-            Text("Карточка \(quizViewModel.currentCardIndex + 1) из \(quizViewModel.totalCards)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            // Flashcard
-            FlashcardView(
-                flashcard: flashcard,
-                isShowingAnswer: quizViewModel.showAnswer,
-                onTap: {
-                    quizViewModel.toggleShowAnswer()
-                }
-            )
-            
-            Spacer()
-            
-            // Answer buttons
-            if quizViewModel.showAnswer {
-                HStack(spacing: 20) {
+        ScrollView {
+            VStack(spacing: 20) {
+                ProgressView(value: quizViewModel.progress)
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .padding()
+                
+                Text("Карточка \(quizViewModel.currentCardIndex + 1) из \(quizViewModel.totalCards)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                FlashcardView(
+                    flashcard: flashcard,
+                    isShowingAnswer: quizViewModel.showAnswer,
+                    onTap: {
+                        quizViewModel.toggleShowAnswer()
+                    }
+                )
+                .padding(.vertical)
+                
+                if quizViewModel.showAnswer {
+                    HStack(spacing: 20) {
+                        Button {
+                            quizViewModel.recordAnswer(isCorrect: false)
+                        } label: {
+                            Text("Не знаю")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.red.opacity(0.8))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button {
+                            quizViewModel.recordAnswer(isCorrect: true)
+                        } label: {
+                            Text("Знаю")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.green.opacity(0.8))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                } else {
                     Button {
-                        quizViewModel.recordAnswer(isCorrect: false)
+                        quizViewModel.toggleShowAnswer()
                     } label: {
-                        Text("Не знаю")
+                        Text("Показать ответ")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.red.opacity(0.8))
+                            .background(category.color.color.opacity(0.8))
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
-                    
-                    Button {
-                        quizViewModel.recordAnswer(isCorrect: true)
-                    } label: {
-                        Text("Знаю")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green.opacity(0.8))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
+                    .padding()
                 }
-                .padding()
-            } else {
-                Button {
-                    quizViewModel.toggleShowAnswer()
-                } label: {
-                    Text("Показать ответ")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(category.color.color.opacity(0.8))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding()
             }
+            .padding()
         }
-        .padding()
     }
     
     var quizResultView: some View {
