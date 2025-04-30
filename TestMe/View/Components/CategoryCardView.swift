@@ -11,6 +11,7 @@ struct CategoryCardView: View {
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
                 Spacer()
             }
             
@@ -27,7 +28,7 @@ struct CategoryCardView: View {
             }
         }
         .padding()
-        .frame(width: 160, height: 120)
+        .frame(width: 180, height: 120)
         .background(category.color.color.opacity(0.8))
         .cornerRadius(12)
         .shadow(color: category.color.color.opacity(0.3), radius: 5, x: 0, y: 2)
