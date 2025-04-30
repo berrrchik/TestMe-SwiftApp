@@ -55,7 +55,7 @@ struct StatsView: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            HStack(spacing: 15) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
                 statsCard(
                     value: "\(quizResults.count)",
                     title: "Квизов пройдено",
@@ -69,9 +69,7 @@ struct StatsView: View {
                     icon: "chart.bar.fill",
                     color: .blue
                 )
-            }
-            
-            HStack(spacing: 15) {
+                
                 statsCard(
                     value: "\(totalCorrectAnswers)",
                     title: "Правильных ответов",
@@ -154,14 +152,16 @@ struct StatsView: View {
                 Spacer()
             }
             
-            HStack {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding()
+        .frame(height: 150)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
