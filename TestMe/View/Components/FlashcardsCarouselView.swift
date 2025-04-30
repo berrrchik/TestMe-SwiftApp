@@ -126,12 +126,10 @@ struct FlashcardsCarouselView: View {
                 
                 HStack {
                     Button(action: {
-                        withAnimation {
                             if currentIndex > 0 {
                                 currentIndex -= 1
                                 showingDefinition = false
                             }
-                        }
                     }) {
                         Image(systemName: "arrow.left")
                             .font(.title2)
@@ -146,12 +144,10 @@ struct FlashcardsCarouselView: View {
                     Spacer()
                     
                     Button(action: {
-                        withAnimation {
                             if currentIndex < flashcards.count - 1 {
                                 currentIndex += 1
                                 showingDefinition = false
                             }
-                        }
                     }) {
                         Image(systemName: "arrow.right")
                             .font(.title2)
