@@ -13,7 +13,7 @@ struct CategoriesView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 16)], spacing: 16) {
+                VStack {
                     ForEach(categoryViewModel.categories) { category in
                         NavigationLink(destination: CategoryDetailView(category: category)) {
                             CategoryCardView(
