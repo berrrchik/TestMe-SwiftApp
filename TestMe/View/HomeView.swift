@@ -4,6 +4,10 @@ struct HomeView: View {
     @EnvironmentObject var categoryViewModel: CategoryViewModel
     @EnvironmentObject var flashcardViewModel: FlashcardViewModel
     @State private var showHeroSection = true
+    @State private var learningStats: TodayLearningStats?
+    @State private var lastLearningDate: Date?
+    
+    private let storageService = StorageService.shared
     
     var body: some View {
         NavigationView {
@@ -11,6 +15,10 @@ struct HomeView: View {
                 VStack(spacing: 20) {
                     if showHeroSection {
                         heroSection
+                    }
+                    
+                    if let stats = learningStats, stats.totalRemaining > 0 {
+                        learningSection
                     }
                     
                     if !categoryViewModel.categories.isEmpty {
@@ -22,6 +30,10 @@ struct HomeView: View {
                 .padding()
             }
             .navigationTitle("TestMe")
+            .onAppear {
+                learningStats = storageService.getDailyLearningStats()
+                lastLearningDate = storageService.getLastLearningSessionDate()
+            }
         }
     }
     
@@ -156,6 +168,54 @@ struct HomeView: View {
                 .fill(Color(UIColor.systemBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
+    }
+    
+    var learningSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Продолжить обучение")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            NavigationLink(destination: LearningView(flashcardViewModel: flashcardViewModel)) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Персонализированное обучение")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        if let stats = learningStats {
+                            Text("\(stats.totalRemaining) карточек на сегодня")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if let date = lastLearningDate {
+                            Text("Последнее занятие: \(formattedDate(date))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "brain")
+                        .font(.system(size: 30))
+                        .foregroundColor(.blue)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.blue.opacity(0.1))
+                )
+            }
+        }
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
