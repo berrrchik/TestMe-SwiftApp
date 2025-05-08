@@ -57,7 +57,6 @@ struct QuizView: View {
                         quizViewModel.toggleShowAnswer()
                     }
                 )
-                .padding(.vertical)
                 
                 if quizViewModel.showAnswer {
                     HStack(spacing: 20) {
