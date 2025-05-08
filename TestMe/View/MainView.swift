@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainView: View {
     @State private var selectedTab = 0
+    @EnvironmentObject var flashcardViewModel: FlashcardViewModel
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -17,11 +18,17 @@ struct MainView: View {
                 }
                 .tag(1)
             
+            LearningView(flashcardViewModel: flashcardViewModel)
+                .tabItem {
+                    Label("Обучение", systemImage: "brain")
+                }
+                .tag(2)
+            
             StatsView()
                 .tabItem {
                     Label("Статистика", systemImage: "chart.bar")
                 }
-                .tag(2)
+                .tag(3)
         }
     }
 }
