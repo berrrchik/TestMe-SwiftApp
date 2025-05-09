@@ -39,6 +39,15 @@ struct FlashcardDetailView: View {
                         set: { isLearned in
                             var updatedFlashcard = flashcard
                             updatedFlashcard.isLearned = isLearned
+                            
+                            if isLearned {
+                                updatedFlashcard.learningState = .mastered
+                                updatedFlashcard.nextReviewDate = Calendar.current.date(byAdding: .month, value: 6, to: Date())
+                            } else if updatedFlashcard.learningState == .mastered {
+                                updatedFlashcard.learningState = .reviewing
+                                updatedFlashcard.nextReviewDate = Calendar.current.date(byAdding: .day, value: 1, to: Date())
+                            }
+                            
                             flashcardViewModel.updateFlashcard(updatedFlashcard)
                         }
                     )) {
@@ -50,6 +59,29 @@ struct FlashcardDetailView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemBackground))
                             .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 1)
+                    )
+                    .padding(.horizontal)
+                }
+                
+                if flashcard.learningState != .new {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Статус изучения: \(learningStateText(flashcard.learningState))")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            if let nextDate = flashcard.nextReviewDate {
+                                Text("Следующее повторение: \(formattedDate(nextDate))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.secondarySystemBackground))
                     )
                     .padding(.horizontal)
                 }
@@ -86,6 +118,26 @@ struct FlashcardDetailView: View {
                 }
             }
         }
+    }
+    
+    private func learningStateText(_ state: LearningState) -> String {
+        switch state {
+        case .new:
+            return "Новая"
+        case .learning:
+            return "Изучается"
+        case .reviewing:
+            return "На повторении"
+        case .mastered:
+            return "Изучена"
+        }
+    }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
     }
 }
 
