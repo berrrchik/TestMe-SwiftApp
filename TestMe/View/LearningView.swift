@@ -50,31 +50,23 @@ struct LearningView: View {
         }
     }
     
-    var startLearningView: some View {
+    private var startLearningView: some View {
         VStack(spacing: 25) {
             progressHeader
-            
             Spacer()
-            
             VStack(spacing: 15) {
                 Image(systemName: "lightbulb.fill")
                     .font(.system(size: 60))
                     .foregroundColor(.yellow)
-                
                 Text("Готовы к обучению?")
                     .font(.title)
                     .fontWeight(.bold)
-                
                 Text("Сегодня вас ждет \(learningViewModel.todayStats.totalRemaining) карточек")
                     .font(.headline)
                     .foregroundColor(.secondary)
             }
-            
             Spacer()
-            
-            Button {
-                startLearning()
-            } label: {
+            Button(action: startLearning) {
                 Text("Начать обучение")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
@@ -87,15 +79,14 @@ struct LearningView: View {
         }
         .padding()
     }
-    
-    var progressHeader: some View {
+
+    private var progressHeader: some View {
         VStack(spacing: 10) {
             HStack {
                 VStack(alignment: .leading) {
                     Text("Новые:")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
                     HStack {
                         Text("\(learningViewModel.todayStats.remainingNew)")
                             .font(.headline)
@@ -104,14 +95,11 @@ struct LearningView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                
                 Spacer()
-                
                 VStack(alignment: .trailing) {
                     Text("На повторение:")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
                     HStack {
                         Text("\(learningViewModel.todayStats.remainingReviews)")
                             .font(.headline)
@@ -121,15 +109,12 @@ struct LearningView: View {
                     }
                 }
             }
-            
             if learningViewModel.todayStats.reviewedCards > 0 {
                 HStack {
                     Text("Сегодня изучено: \(learningViewModel.todayStats.reviewedCards) карточек")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
                     Spacer()
-                    
                     Text("\(Int(learningViewModel.todayStats.percentCorrect))% правильно")
                         .font(.subheadline)
                         .foregroundColor(learningViewModel.todayStats.percentCorrect >= 70 ? .green : .orange)
@@ -142,52 +127,34 @@ struct LearningView: View {
                 .fill(Color(UIColor.secondarySystemBackground))
         )
     }
-    
-    func learningCardView(flashcard: Flashcard) -> some View {
+
+    private func learningCardView(flashcard: Flashcard) -> some View {
         VStack(spacing: 20) {
             ScrollView {
                 progressHeader
-                
                 FlashcardView(
                     flashcard: flashcard,
                     isShowingAnswer: showAnswer,
-                    onTap: {
-                            showAnswer.toggle()
-                    }
+                    onTap: { showAnswer.toggle() }
                 )
                 .padding(.horizontal)
                 .padding(.vertical, 10)
-                
-                
+
                 if showAnswer {
                     VStack(spacing: 15) {
                         Text("Насколько хорошо вы знаете эту карточку?")
                             .font(.headline)
                             .multilineTextAlignment(.center)
-                        
                         HStack(spacing: 10) {
-                            answerButton(text: "Снова", color: .red) {
-                                processAnswer(quality: .again)
-                            }
-                            
-                            answerButton(text: "Трудно", color: .orange) {
-                                processAnswer(quality: .hard)
-                            }
-                            
-                            answerButton(text: "Хорошо", color: .blue) {
-                                processAnswer(quality: .good)
-                            }
-                            
-                            answerButton(text: "Легко", color: .green) {
-                                processAnswer(quality: .easy)
-                            }
+                            answerButton(text: "Снова", color: .red) { processAnswer(quality: .again) }
+                            answerButton(text: "Трудно", color: .orange) { processAnswer(quality: .hard) }
+                            answerButton(text: "Хорошо", color: .blue) { processAnswer(quality: .good) }
+                            answerButton(text: "Легко", color: .green) { processAnswer(quality: .easy) }
                         }
                     }
                     .transition(.opacity)
                 } else {
-                    Button {
-                        showAnswer = true
-                    } label: {
+                    Button(action: { showAnswer = true }) {
                         Text("Показать ответ")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
@@ -203,23 +170,20 @@ struct LearningView: View {
         }
         .padding()
     }
-    
-    var emptyStateView: some View {
+
+    private var emptyStateView: some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 70))
                 .foregroundColor(.green)
-            
             Text("Все карточки на сегодня изучены!")
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
-            
             Text("Вернитесь завтра для новых карточек")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            
             if learningViewModel.todayStats.reviewedCards > 0 {
                 Text("Сегодня вы изучили \(learningViewModel.todayStats.reviewedCards) карточек")
                     .font(.headline)
@@ -228,20 +192,17 @@ struct LearningView: View {
         }
         .padding()
     }
-    
-    var completedView: some View {
+
+    private var completedView: some View {
         VStack(spacing: 25) {
             Image(systemName: "star.fill")
                 .font(.system(size: 70))
                 .foregroundColor(.yellow)
-            
             Text("Отличная работа!")
                 .font(.title)
                 .fontWeight(.bold)
-            
             Text("Вы завершили сегодняшнюю сессию")
                 .font(.headline)
-            
             VStack(alignment: .leading, spacing: 10) {
                 statsRow(label: "Карточек изучено:", value: "\(learningViewModel.todayStats.reviewedCards)")
                 statsRow(label: "Правильных ответов:", value: "\(learningViewModel.todayStats.correctAnswers)")
@@ -252,13 +213,17 @@ struct LearningView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(UIColor.secondarySystemBackground))
             )
-            
             Spacer()
-            
-            Button {
+            Button(action: {
                 isCompleted = false
                 learningViewModel.resetSession()
-            } label: {
+                
+                if let nextCard = learningViewModel.getNextCardForSession() {
+                    currentFlashcard = nextCard
+                } else {
+                    currentFlashcard = nil
+                }
+            }) {
                 Text("Вернуться")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
@@ -271,21 +236,19 @@ struct LearningView: View {
         }
         .padding()
     }
-    
-    func statsRow(label: String, value: String) -> some View {
+
+    private func statsRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
             Spacer()
-            
             Text(value)
                 .font(.headline)
         }
     }
-    
-    func answerButton(text: String, color: Color, action: @escaping () -> Void) -> some View {
+
+    private func answerButton(text: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
                 .font(.subheadline)
@@ -297,29 +260,69 @@ struct LearningView: View {
                 .cornerRadius(8)
         }
     }
-    
-    // MARK: - Actions
-    
+
     private func startLearning() {
         learningViewModel.resetSession()
+        isCompleted = false
         
-        currentFlashcard = learningViewModel.getNextCardForSession()
-        showAnswer = false
+        if let nextCard = learningViewModel.getNextCardForSession() {
+            currentFlashcard = nextCard
+        } else {
+            isCompleted = true
+        }
     }
-    
+
     private func processAnswer(quality: AnswerQuality) {
         guard let flashcard = currentFlashcard else { return }
-        
         learningViewModel.processAnswer(for: flashcard, quality: quality)
         
-        if learningViewModel.isSessionCompleted {
+        if learningViewModel.isSessionFinished() {
             isCompleted = true
             currentFlashcard = nil
         } else {
-            currentFlashcard = learningViewModel.getNextCardForSession()
+            advanceToNextValidCard()
+        }
+        showAnswer = false
+    }
+
+    private func advanceToNextValidCard() {
+        if learningViewModel.sessionCards.isEmpty {
+            learningViewModel.resetSession()
         }
         
-        showAnswer = false
+        if learningViewModel.isSessionFinished() {
+            currentFlashcard = nil
+            isCompleted = true
+            return
+        }
+        
+        var next = learningViewModel.getNextCardForSession()
+        
+        if next == nil && !learningViewModel.isSessionFinished() {
+            learningViewModel.resetSession()
+            next = learningViewModel.getNextCardForSession()
+        }
+        
+        while let card = next,
+              let nextDate = card.nextReviewDate,
+              nextDate > Date() {
+            learningViewModel.skipCurrentCard()
+            next = learningViewModel.getNextCardForSession()
+            
+            if learningViewModel.isSessionFinished() {
+                currentFlashcard = nil
+                isCompleted = true
+                return
+            }
+        }
+        
+        if let valid = next {
+            currentFlashcard = valid
+            isCompleted = false
+        } else {
+            currentFlashcard = nil
+            isCompleted = true
+        }
     }
 }
 
