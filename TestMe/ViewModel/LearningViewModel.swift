@@ -6,190 +6,239 @@ class LearningViewModel: ObservableObject {
     @Published var cardsToReview: [Flashcard] = []
     @Published var newCardsForToday: [Flashcard] = []
     @Published var todayStats: TodayLearningStats
-    
-    @Published private(set) var sessionCards: [Flashcard] = []
-    private var currentSessionIndex: Int = 0
-    
+
+    @Published public var sessionCards: [Flashcard] = []
+    public var currentSessionIndex: Int = 0
+
     private let storageService = StorageService.shared
     private let flashcardViewModel: FlashcardViewModel
-    
+
     init(flashcardViewModel: FlashcardViewModel) {
         self.flashcardViewModel = flashcardViewModel
         self.settings = storageService.getLearningSettings()
-        
+
         if let savedStats = storageService.getDailyLearningStats(),
            LearningViewModel.isToday(storageService.getLastLearningSessionDate()) {
             self.todayStats = savedStats
         } else {
             self.todayStats = TodayLearningStats()
         }
-        
+
         updateCardsForToday()
     }
-    
+
     func updateCardsForToday() {
         let now = Date()
         let allFlashcards = flashcardViewModel.flashcards
-        
-        let dueCards = allFlashcards.filter { flashcard in
-            if let nextReview = flashcard.nextReviewDate, 
-               flashcard.learningState != .new && flashcard.learningState != .mastered {
-                return nextReview <= now
+
+        let dueCards = allFlashcards.filter { card in
+            if let next = card.nextReviewDate,
+               card.learningState != .new && card.learningState != .mastered {
+                return next <= now
             }
             return false
-        }.sorted { $0.easeFactor < $1.easeFactor }
-        
+        }
+        .sorted { $0.nextReviewDate! < $1.nextReviewDate! }
+
         cardsToReview = Array(dueCards.prefix(settings.dailyReviewCardsLimit))
-        
+
         let newCards = allFlashcards.filter { $0.learningState == .new }
             .sorted { ($0.term + $0.definition).count < ($1.term + $1.definition).count }
-        
         newCardsForToday = Array(newCards.prefix(settings.dailyNewCardsLimit))
-        
+
         updateTodayStats()
-        
-        storageService.saveLastLearningSessionDate(Date())
+        storageService.saveLastLearningSessionDate(now)
         storageService.saveDailyLearningStats(todayStats)
     }
-    
+
     func prepareSessionCards() {
-        sessionCards = []
-        currentSessionIndex = 0
-        sessionCards.append(contentsOf: cardsToReview)
-        sessionCards.append(contentsOf: newCardsForToday)
-    }
-    
-    func getNextCardForSession() -> Flashcard? {
-        guard !sessionCards.isEmpty, currentSessionIndex < sessionCards.count else {
-            return nil
+        let now = Date()
+        
+        let filteredReviewCards = cardsToReview.filter { card in
+            if let nextDate = card.nextReviewDate {
+                return nextDate <= now
+            }
+            return true
         }
-        let card = sessionCards[currentSessionIndex]
-        return card
-    }
-    
-    func processAnswer(for flashcard: Flashcard, quality: AnswerQuality) {
-        var updatedFlashcard = flashcard
+
+        var mixed: [Flashcard] = []
+        let newCount = newCardsForToday.count
+        let reviewCount = filteredReviewCards.count
         
-        updatedFlashcard.lastReviewed = Date()
-        
-        let newEaseFactor = calculateNewEaseFactor(current: flashcard.easeFactor, quality: quality)
-        updatedFlashcard.easeFactor = max(1.3, newEaseFactor)
-        
-        updatedFlashcard.repetitionCount += 1
-        
-        switch (updatedFlashcard.learningState, quality) {
-        case (.new, .easy), (.new, .good):
-            updatedFlashcard.learningState = .learning
-        case (.learning, .easy):
-            updatedFlashcard.learningState = .reviewing
-        case (.reviewing, .easy) where updatedFlashcard.repetitionCount >= 4:
-            updatedFlashcard.learningState = .mastered
-            updatedFlashcard.isLearned = true
-        case (.reviewing, .hard) where updatedFlashcard.repetitionCount >= 7:
-            updatedFlashcard.learningState = .mastered
-            updatedFlashcard.isLearned = true
-        case (.mastered, .again):
-            updatedFlashcard.learningState = .reviewing
-            updatedFlashcard.repetitionCount = max(2, updatedFlashcard.repetitionCount - 2)
-            updatedFlashcard.isLearned = false
-        default:
-            break
-        }
-        
-        if updatedFlashcard.learningState != .mastered {
-            let interval = calculateNextInterval(for: updatedFlashcard, quality: quality)
-            updatedFlashcard.nextReviewDate = Calendar.current.date(byAdding: .second, value: interval, to: Date())
+        if newCount == 0 {
+            mixed = filteredReviewCards
+        } else if reviewCount == 0 {
+            mixed = newCardsForToday
         } else {
-            updatedFlashcard.nextReviewDate = Calendar.current.date(byAdding: .month, value: 6, to: Date())
+            let newPerReview = max(1, newCount / max(1, reviewCount))
+            var newIndex = 0
+            var reviewIndex = 0
+            
+            while newIndex < newCount || reviewIndex < reviewCount {
+                for _ in 0..<min(3, reviewCount - reviewIndex) {
+                    if reviewIndex < reviewCount {
+                        mixed.append(filteredReviewCards[reviewIndex])
+                        reviewIndex += 1
+                    }
+                }
+                
+                for _ in 0..<min(newPerReview, newCount - newIndex) {
+                    if newIndex < newCount {
+                        mixed.append(newCardsForToday[newIndex])
+                        newIndex += 1
+                    }
+                }
+            }
         }
         
-        flashcardViewModel.updateFlashcard(updatedFlashcard)
+        sessionCards = mixed
+        currentSessionIndex = 0
         
+        if sessionCards.isEmpty {
+            sessionCards = newCardsForToday
+        }
+    }
+
+    func getNextCardForSession() -> Flashcard? {
+        guard currentSessionIndex < sessionCards.count else { return nil }
+        return sessionCards[currentSessionIndex]
+    }
+
+    func processAnswer(for card: Flashcard, quality: AnswerQuality) {
+        var updated = card
+        let now = Date()
+        let q = quality.rawValue
+
+        if updated.learningState == .new {
+            updated.learningState = .learning
+
+            let startOfToday = Calendar.current.startOfDay(for: now)
+            let tomorrow = Calendar.current.date(
+                byAdding: .day,
+                value: 1,
+                to: startOfToday
+            )!
+            updated.nextReviewDate = tomorrow
+
+            flashcardViewModel.updateFlashcard(updated)
+
+            todayStats.reviewedCards += 1
+            if q >= 3 { todayStats.correctAnswers += 1 }
+            storageService.saveDailyLearningStats(todayStats)
+
+            currentSessionIndex += 1
+            return
+        }
+
+        let oldLast = card.lastReviewed
+        let oldNext = card.nextReviewDate
+        let oldReps = card.repetitionCount
+
+        updated.lastReviewed = now
+
+        if q < 3 {
+            updated.repetitionCount = 0
+            updated.nextReviewDate = Calendar.current
+                .date(byAdding: .day, value: 1, to: now)
+            updated.learningState = .learning
+
+        } else {
+            let rawEF = updated.easeFactor
+                + (0.1 - Double(5 - q) * (0.08 + Double(5 - q) * 0.02))
+            updated.easeFactor = max(1.3, rawEF)
+
+            updated.repetitionCount += 1
+
+            let intervalDays = calculateSM2Interval(
+                oldReps: oldReps,
+                oldLast: oldLast,
+                oldNext: oldNext,
+                newEF: updated.easeFactor
+            )
+            updated.nextReviewDate = Calendar.current
+                .date(byAdding: .day, value: intervalDays, to: now)
+
+            if updated.repetitionCount >= 3 {
+                updated.learningState = .reviewing
+            }
+            if updated.repetitionCount >= 5 {
+                updated.learningState = .mastered
+                updated.isLearned = true
+            }
+        }
+
+        flashcardViewModel.updateFlashcard(updated)
+
         todayStats.reviewedCards += 1
-        if quality != .again {
-            todayStats.correctAnswers += 1
-        }
-        
+        if q >= 3 { todayStats.correctAnswers += 1 }
         storageService.saveDailyLearningStats(todayStats)
-        
+
         currentSessionIndex += 1
     }
+
+    /// SM-2: 1-й повтор → 1 день, 2-й → 6 дней, далее: prevInterval * EF
+    private func calculateSM2Interval(
+        oldReps: Int,
+        oldLast: Date?,
+        oldNext: Date?,
+        newEF: Double
+    ) -> Int {
+        switch oldReps {
+        case 0: return 1
+        case 1: return 6
+        default:
+            if let last = oldLast, let next = oldNext {
+                let prevInterval = next.timeIntervalSince(last) / 86400.0
+                let newInterval = prevInterval * newEF
+                return max(1, Int(round(newInterval)))
+            } else {
+                return Int(round(newEF))
+            }
+        }
+    }
+
+    func isSessionFinished() -> Bool {
+        return currentSessionIndex >= sessionCards.count || sessionCards.isEmpty
+    }
     
+    func hasAvailableCardsForToday() -> Bool {
+        let now = Date()
+        return sessionCards.contains { card in
+            if let nextDate = card.nextReviewDate {
+                return nextDate <= now
+            }
+            return true
+        }
+    }
+
+    var isSessionCompleted: Bool {
+        isSessionFinished()
+    }
+
     func resetSession() {
+        updateCardsForToday()
         prepareSessionCards()
     }
-    
-    var isSessionCompleted: Bool {
-        return sessionCards.isEmpty || currentSessionIndex >= sessionCards.count
-    }
-    
+
     private func updateTodayStats() {
         todayStats.remainingNew = newCardsForToday.count
         todayStats.remainingReviews = cardsToReview.count
-        
-        storageService.saveDailyLearningStats(todayStats)
     }
-    
+
     func saveSettings() {
         storageService.saveLearningSettings(settings)
         updateCardsForToday()
     }
-    
+
     private static func isToday(_ date: Date?) -> Bool {
         guard let date = date else { return false }
         return Calendar.current.isDateInToday(date)
     }
-    
-    private func calculateNewEaseFactor(current: Double, quality: AnswerQuality) -> Double {
-        let qualityValue = quality.rawValue
-        return current + (0.1 - (5 - Double(qualityValue)) * (0.08 + (5 - Double(qualityValue)) * 0.02))
-    }
-    
-    private func calculateNextInterval(for flashcard: Flashcard, quality: AnswerQuality) -> Int {
-        let qualityValue = quality.rawValue
-        
-        switch (flashcard.learningState, flashcard.repetitionCount) {
-        case (.new, _):
-            return qualityValue == 0 ? 60 : 600
-            
-        case (.learning, 1):
-            return qualityValue <= 1 ? 600 : 86400
-            
-        case (.learning, _):
-            return qualityValue <= 1 ? 1800 : 432000
-            
-        case (.reviewing, _):
-            let interval = calculateSpacedRepetitionInterval(for: flashcard, quality: quality)
-            return interval
-            
-        default:
-            return 86400
-        }
-    }
-    
-    private func calculateSpacedRepetitionInterval(for flashcard: Flashcard, quality: AnswerQuality) -> Int {
-        let qualityValue = quality.rawValue
-        
-        if qualityValue <= 1 {
-            return 86400
-        }
-        
-        let repetition = flashcard.repetitionCount
-        let easeFactor = flashcard.easeFactor
-        
-        var interval: Double
-        
-        switch repetition {
-        case 0, 1:
-            interval = 1
-        case 2:
-            interval = 6
-        default:
-            let lastInterval = Double(Calendar.current.dateComponents([.second], from: flashcard.lastReviewed ?? Date(timeIntervalSinceNow: -86400), to: Date()).second ?? 86400) / 86400.0
-            interval = lastInterval * easeFactor
-        }
-        
-        return Int(interval * 86400)
+}
+
+extension LearningViewModel {
+    func skipCurrentCard() {
+        currentSessionIndex += 1
     }
 }
 
