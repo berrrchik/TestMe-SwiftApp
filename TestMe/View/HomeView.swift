@@ -213,6 +213,7 @@ struct HomeView: View {
     
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
         formatter.dateStyle = .short
         formatter.timeStyle = .short
         return formatter.string(from: date)

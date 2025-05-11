@@ -324,6 +324,13 @@ struct LearningView: View {
             isCompleted = true
         }
     }
+
+    private func reminderTimeFormatted(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
 }
 
 struct LearningSettingsView: View {
@@ -427,6 +434,7 @@ struct LearningSettingsView: View {
     
     private func reminderTimeFormatted(_ date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }

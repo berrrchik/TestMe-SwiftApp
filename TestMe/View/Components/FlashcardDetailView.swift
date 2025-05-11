@@ -135,6 +135,7 @@ struct FlashcardDetailView: View {
     
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU") 
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
