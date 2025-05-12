@@ -89,37 +89,37 @@ struct FlashcardsCarouselView: View {
                     
                     // Индикатор состояния изучения
                     HStack {
-                        Button(action: {
-                            var updatedFlashcard = flashcards[currentIndex]
-                            updatedFlashcard.isLearned = true
-                            flashcardViewModel.updateFlashcard(updatedFlashcard)
-                        }) {
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                Text("Знаю")
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.green.opacity(0.1))
-                            .foregroundColor(.green)
-                            .cornerRadius(8)
-                        }
-                        
-                        Button(action: {
-                            var updatedFlashcard = flashcards[currentIndex]
-                            updatedFlashcard.isLearned = false
-                            flashcardViewModel.updateFlashcard(updatedFlashcard)
-                        }) {
-                            HStack {
-                                Image(systemName: "xmark.circle.fill")
-                                Text("Не знаю")
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.red.opacity(0.1))
-                            .foregroundColor(.red)
-                            .cornerRadius(8)
-                        }
+//                        Button(action: {
+//                            var updatedFlashcard = flashcards[currentIndex]
+//                            updatedFlashcard.isLearned = true
+//                            flashcardViewModel.updateFlashcard(updatedFlashcard)
+//                        }) {
+//                            HStack {
+//                                Image(systemName: "checkmark.circle.fill")
+//                                Text("Знаю")
+//                            }
+//                            .padding()
+//                            .frame(maxWidth: .infinity)
+//                            .background(Color.green.opacity(0.1))
+//                            .foregroundColor(.green)
+//                            .cornerRadius(8)
+//                        }
+//                        
+//                        Button(action: {
+//                            var updatedFlashcard = flashcards[currentIndex]
+//                            updatedFlashcard.isLearned = false
+//                            flashcardViewModel.updateFlashcard(updatedFlashcard)
+//                        }) {
+//                            HStack {
+//                                Image(systemName: "xmark.circle.fill")
+//                                Text("Не знаю")
+//                            }
+//                            .padding()
+//                            .frame(maxWidth: .infinity)
+//                            .background(Color.red.opacity(0.1))
+//                            .foregroundColor(.red)
+//                            .cornerRadius(8)
+//                        }
                     }
                     .padding(.horizontal)
                 }
