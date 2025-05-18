@@ -42,9 +42,11 @@ class LearningViewModel: ObservableObject {
 
         cardsToReview = Array(dueCards.prefix(settings.dailyReviewCardsLimit))
 
+        let newCardsToShow = max(0, settings.dailyNewCardsLimit - todayStats.reviewedCards + todayStats.remainingNew)
+        
         let newCards = allFlashcards.filter { $0.learningState == .new }
             .sorted { ($0.term + $0.definition).count < ($1.term + $1.definition).count }
-        newCardsForToday = Array(newCards.prefix(settings.dailyNewCardsLimit))
+        newCardsForToday = Array(newCards.prefix(newCardsToShow))
 
         updateTodayStats()
         storageService.saveLastLearningSessionDate(now)
@@ -108,11 +110,12 @@ class LearningViewModel: ObservableObject {
         var updated = card
         let now = Date()
         let q = quality.rawValue
+        
+        let startOfToday = Calendar.current.startOfDay(for: now)
 
         if updated.learningState == .new {
             updated.learningState = .learning
 
-            let startOfToday = Calendar.current.startOfDay(for: now)
             let tomorrow = Calendar.current.date(
                 byAdding: .day,
                 value: 1,
@@ -138,8 +141,8 @@ class LearningViewModel: ObservableObject {
 
         if q < 3 {
             updated.repetitionCount = 0
-            updated.nextReviewDate = Calendar.current
-                .date(byAdding: .day, value: 1, to: now)
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: startOfToday)!
+            updated.nextReviewDate = tomorrow
             updated.learningState = .learning
 
         } else {
@@ -155,8 +158,9 @@ class LearningViewModel: ObservableObject {
                 oldNext: oldNext,
                 newEF: updated.easeFactor
             )
+            
             updated.nextReviewDate = Calendar.current
-                .date(byAdding: .day, value: intervalDays, to: now)
+                .date(byAdding: .day, value: intervalDays, to: startOfToday)
 
             if updated.repetitionCount >= 3 {
                 updated.learningState = .reviewing
